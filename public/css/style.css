@@ -1,0 +1,31 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-size: 16px; /*1rem = 16px*/
+}
+
+#table_drivers {
+    /* width: 360px !important;
+    height: 660px;
+    border: 1px solid lightgray;
+    position: fixed;
+    top: 60px;
+    left: 15px;
+    z-index: 2;
+    background-color: white;
+    box-shadow: 2px 3px 10px 0 rgba(0, 0, 0, .45); */
+}
+
+.gm-style .gm-style-iw.gm-style-iw-c {
+    box-shadow: 0 2px 7px 1px rgba(0,0,0,0.6) !important;
+}
+
+.gm-style .gm-style-iw.gm-style-iw-c .gm-style-iw-d  p {
+    font-weight: bold !important;
+}
+
+
