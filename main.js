@@ -1,6 +1,7 @@
 
 document.addEventListener("DOMContentLoaded", function() {
   let polylineTracking = null;
+  const loading = document.getElementById("loading");
   const setMapOptions = {
     zoom: 15,
     center: new google.maps.LatLng(21.036809, 105.782771),
@@ -157,10 +158,14 @@ document.addEventListener("DOMContentLoaded", function() {
     };
   }
 
-  function getJourney(appcode, origin, destination) {
-    origin = origin.replace(/\s+/g, "");
-    destination = destination.replace(/\s+/g, "");
-    fetch(`http://localhost:8082/maps/api/directions/json?origin=${origin}&destination=${destination}`, {
+  document.getElementById("btn_tracking").addEventListener("click", function () {
+    loading.style.display = "flex";
+    const mapUrl = document.getElementById("map-url").value;
+    const origin = document.getElementById("origin").value.replace(/\s+/g, "");
+    const destination = document.getElementById("destination").value.replace(/\s+/g, "");
+    const appcode = document.getElementById("app-code").value;
+
+    fetch(`${mapUrl}/maps/api/directions/json?origin=${origin}&destination=${destination}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -180,16 +185,10 @@ document.addEventListener("DOMContentLoaded", function() {
         drawTracking(polyline, startPoint, endPoint, distance);
       })
       .catch((err) => {
-        console.log(err);
+        alert(err);
+      }).finally(() => {
+        loading.style.display = "none";
       });
-  }
-
-  document.getElementById("btn_tracking").addEventListener("click", function () {
-    const origin = document.getElementById("origin").value;
-    const destination = document.getElementById("destination").value;
-    const appcode = document.getElementById("app-code").value;
-
-    getJourney(appcode, origin, destination);
   });
 
   map.addListener("click", function(event) {
