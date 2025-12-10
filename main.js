@@ -59,6 +59,17 @@ const mapStyles = [
   },
 ];
 
+function genId() {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch (e) {
+    // ignore and fallback
+  }
+  return `${Math.random().toString(36).slice(2, 9)}`;
+};
+
 document.addEventListener("DOMContentLoaded", function () {
   let polylineTracking = null;
   const loading = document.getElementById("loading");
@@ -189,8 +200,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // clear previous entries
         routesDiv.innerHTML = "";
         routesDiv.style.display = "block";
+
         response.routes.forEach((route, idx) => {
-          const id = `route-${idx}`;
+          const id = genId();
           const wrapper = document.createElement("div");
           wrapper.className = "flex items-center space-x-2";
 
