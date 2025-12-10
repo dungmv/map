@@ -26,9 +26,19 @@
                 <option value="EMDDI">EMDDI</option>
                 <option value="ANTAXI">ANTAXI</option>
             </select>
-            <button class="px-3 py-2 rounded border hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700" type="button" id="btn_tracking">Tracking</button>
+            <button class="px-3 py-2 rounded border hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700" type="button" id="btn_search">Search</button>
         </div>
-    
+        <div class="relative size-32">
+            <div class="absolute top-0 right-0 size-16">
+                <input type="radio" id="op1" name="route" value="1"/>
+                <label for="op1">Đ. Thụy Khuê</label>
+                <input type="radio" id="op2" name="route" value="2"/>
+                <label for="op2">Đ. Vành Đai 1</label>
+                <input type="radio" id="op3" name="route" value="3"/>
+                <label for="op1">Đ. 5 kéo dài/QL5 và Vành Đai 2</label>
+            </div>
+        </div>
+
         <div id="map" class="w-full h-[calc(100vh-50px)]"></div>
         <div id="loading" style="display: none;" class="absolute w-screen h-screen inset-0 z-50 bg-black opacity-30 flex items-center justify-center">
             <div class="w-12 h-12">

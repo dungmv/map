@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", function() {
   let polylineTracking = null;
   const loading = document.getElementById("loading");
@@ -158,7 +157,7 @@ document.addEventListener("DOMContentLoaded", function() {
     };
   }
 
-  document.getElementById("btn_tracking").addEventListener("click", function () {
+  document.getElementById("btn_search").addEventListener("click", function () {
     loading.style.display = "flex";
     const mapUrl = document.getElementById("map-url").value;
     const origin = document.getElementById("origin").value.replace(/\s+/g, "");
@@ -179,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function() {
       .then((response) => {
         const startPoint = toLatLng(origin);
         const endPoint = toLatLng(destination);
-  
+
         const polyline = response.routes[0].overview_polyline.points;
         const distance = response.routes[0].legs[0].distance.text;
         drawTracking(polyline, startPoint, endPoint, distance);
