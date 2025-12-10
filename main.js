@@ -1,70 +1,72 @@
-document.addEventListener("DOMContentLoaded", function() {
+const mapStyles = [
+  {
+    featureType: "transit",
+    elementType: "labels.icon",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "transit.station",
+    elementType: "geometry",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "poi.business",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "poi",
+    elementType: "geometry",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "poi.park",
+    elementType: "geometry",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "landscape.natural",
+    elementType: "geometry",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "poi.business",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "poi.government",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "poi.medical",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "poi.park",
+    elementType: "labels",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "poi.place_of_worship",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "poi.school",
+    stylers: [{ visibility: "off" }],
+  },
+  {
+    featureType: "poi.sports_complex",
+    stylers: [{ visibility: "off" }],
+  },
+];
+
+document.addEventListener("DOMContentLoaded", function () {
   let polylineTracking = null;
   const loading = document.getElementById("loading");
   const setMapOptions = {
     zoom: 15,
     center: new google.maps.LatLng(21.036809, 105.782771),
     gestureHandling: "greedy",
-    styles: [
-      {
-        featureType: "transit",
-        elementType: "labels.icon",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "transit.station",
-        elementType: "geometry",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.business",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi",
-        elementType: "geometry",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.park",
-        elementType: "geometry",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "landscape.natural",
-        elementType: "geometry",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.business",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.government",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.medical",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.park",
-        elementType: "labels",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.place_of_worship",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.school",
-        stylers: [{ visibility: "off" }],
-      },
-      {
-        featureType: "poi.sports_complex",
-        stylers: [{ visibility: "off" }],
-      },
-    ],
+    styles: mapStyles,
     mapTypeId: google.maps.MapTypeId.ROADMAP,
   };
 
@@ -182,6 +184,45 @@ document.addEventListener("DOMContentLoaded", function() {
         const polyline = response.routes[0].overview_polyline.points;
         const distance = response.routes[0].legs[0].distance.text;
         drawTracking(polyline, startPoint, endPoint, distance);
+        // render route choices into #routes
+        const routesDiv = document.getElementById("routes");
+        // clear previous entries
+        routesDiv.innerHTML = "";
+        routesDiv.style.display = "block";
+        response.routes.forEach((route, idx) => {
+          const id = `route-${idx}`;
+          const wrapper = document.createElement("div");
+          wrapper.className = "flex items-center space-x-2";
+
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.id = id;
+          input.name = "route";
+          input.value = idx;
+          input.className = "w-4 h-4";
+          if (idx === 0) input.checked = true; // default first
+
+          const label = document.createElement("label");
+          label.htmlFor = id;
+          label.className = "text-sm font-medium cursor-pointer";
+          // use route.summary if available, otherwise fall back to index
+          label.textContent = `${route.summary} | ${route.legs[0].distance.text}, ${route.legs[0].duration.text}` || `Route ${idx + 1}`;
+
+          wrapper.appendChild(input);
+          wrapper.appendChild(label);
+          routesDiv.appendChild(wrapper);
+
+          // when radio selection changes, redraw that route
+          input.addEventListener("change", () => {
+            if (input.checked) {
+              const poly = route.overview_polyline && route.overview_polyline.points;
+              const dist = route.legs && route.legs[0] && route.legs[0].distance && route.legs[0].distance.text;
+              if (poly) {
+                drawTracking(poly, startPoint, endPoint, dist || "");
+              }
+            }
+          });
+        });
       })
       .catch((err) => {
         alert(err);
@@ -190,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function() {
       });
   });
 
-  map.addListener("click", function(event) {
+  map.addListener("click", function (event) {
     const lat = event.latLng.lat();
     const lng = event.latLng.lng();
     let marker = null;
@@ -207,12 +248,10 @@ document.addEventListener("DOMContentLoaded", function() {
       input.value = `${lat},${lng}`;
       marker.setPosition(event.latLng);
       marker.setMap(map);
-      marker.addListener("click", function() {
+      marker.addListener("click", function () {
         marker.setMap(null); // Remove marker when clicked
         input.value = ""; // Clear the input field
       });
     }
-
-    console.log("Picked point:", lat, lng);
   });
 });
