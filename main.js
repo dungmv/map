@@ -174,10 +174,11 @@ document.addEventListener("DOMContentLoaded", function () {
     loading.style.display = "flex";
     const mapUrl = document.getElementById("map-url").value;
     const origin = document.getElementById("origin").value.replace(/\s+/g, "");
+    const waypoints = document.getElementById("waypoints").value.replace(/\s+/g, "");
     const destination = document.getElementById("destination").value.replace(/\s+/g, "");
     const appcode = document.getElementById("app-code").value;
 
-    fetch(`${mapUrl}/maps/api/directions/json?origin=${origin}&destination=${destination}`, {
+    fetch(`${mapUrl}/maps/api/directions/json?origin=${origin}&destination=${destination}&waypoints=${waypoints}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
