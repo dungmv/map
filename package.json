@@ -1,15 +1,17 @@
 {
+  "type": "module",
   "scripts": {
-    "start": "http-server",
-    "dev": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
-	"build": "tailwindcss -i ./src/input.css -o ./dist/output.css"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-	"dependencies": {
-		"@tailwindcss/cli": "^4.1.4",
-		"tailwindcss": "^4.1.4"
-	},
-	"packageManager": "pnpm@10.25.0+sha512.5e82639027af37cf832061bcc6d639c219634488e0f2baebe785028a793de7b525ffcd3f7ff574f5e9860654e098fe852ba8ac5dd5cefe1767d23a020a92f501",
-	"devDependencies": {
-		"http-server": "^14.1.1"
-	}
+  "packageManager": "pnpm@10.26.0",
+  "devDependencies": {
+    "@googlemaps/js-api-loader": "^2.0.2",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/google.maps": "^3.58.1",
+    "autoprefixer": "^10.4.23",
+    "tailwindcss": "^4.1.4",
+    "vite": "^7.3.0"
+  }
 }
