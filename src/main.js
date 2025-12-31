@@ -1,11 +1,13 @@
 import "./style.css";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 
+const mapEl = document.getElementById("map");
+
 // Set the options for loading the API.
 setOptions({ key: "AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg" });
 await importLibrary("maps");
-
-const mapEl = document.getElementById("map");
+await importLibrary("marker");
+await importLibrary("geometry");
 
 let polylineTracking = null;
 const loading = document.getElementById("loading");
@@ -14,29 +16,23 @@ const map = new google.maps.Map(mapEl, {
   zoom: 15,
   center: { lat: 21.036809, lng: 105.782771 },
   mapTypeId: google.maps.MapTypeId.ROADMAP,
+  mapId: "DEMO_MAP_ID",
 });
 
-const circleSelectDevice = new google.maps.Circle({
-  id: "circle_select_device_id",
-  map: map,
-  strokeColor: "#FF0000",
-  strokeOpacity: 0.5,
-  strokeWeight: 1,
-  fillColor: "#AA0000",
-  fillOpacity: 0.2,
-  radius: 30,
+const startImg = new google.maps.marker.PinElement({
+  glyphColor: "white",
+  background: "green",
+  borderColor: "black",
 });
-
-circleSelectDevice.setMap(map);
-
-const startMarker = new google.maps.Marker({
+const startMarker = new google.maps.marker.AdvancedMarkerElement({
   title: "Điểm đón khách",
-  icon: "https://s3-ap-southeast-1.amazonaws.com/image-emd/defaults/map-marker-1-32x32.png",
+  position: { lat: 21.029245, lng: 105.777964 },
 });
+startMarker.append(startImg);
 
-const endMarker = new google.maps.Marker({
+const endMarker = new google.maps.marker.AdvancedMarkerElement({
   title: "Điểm trả",
-  icon: "https://s3-ap-southeast-1.amazonaws.com/image-emd/defaults/map-marker-2-32x32.png",
+  position: { lat: 21.036809, lng: 105.782771 },
 });
 
 const infoWindow = new google.maps.InfoWindow({
@@ -45,8 +41,8 @@ const infoWindow = new google.maps.InfoWindow({
 
 function drawTracking(encodedPolyline, startPoint, endPoint, distance) {
   clearMap();
-  startMarker.setPosition(startPoint);
-  endMarker.setPosition(endPoint);
+  startMarker.position = startPoint;
+  endMarker.position = endPoint;
   startMarker.setMap(map);
   endMarker.setMap(map);
 
@@ -65,18 +61,14 @@ function drawTracking(encodedPolyline, startPoint, endPoint, distance) {
 
   // set center map
   const centerPoint = new google.maps.LatLng(
-    parseFloat(
-      (startMarker.getPosition().lat() + endMarker.getPosition().lat()) / 2,
-    ),
-    parseFloat(
-      (startMarker.getPosition().lng() + endMarker.getPosition().lng()) / 2,
-    ),
+    parseFloat((startPoint.lat() + endPoint.lat()) / 2),
+    parseFloat((startPoint.lng() + endPoint.lng()) / 2),
   );
   map.setCenter(centerPoint);
 
   const bounds = new google.maps.LatLngBounds();
-  bounds.extend(startMarker.getPosition());
-  bounds.extend(endMarker.getPosition());
+  bounds.extend(startPoint);
+  bounds.extend(endPoint);
   map.fitBounds(bounds);
 
   infoWindow.setContent(distance);
@@ -98,34 +90,25 @@ function clearMap() {
  */
 function toLatLng(point) {
   const latlng = point.split(",");
-  return {
-    lat: parseFloat(latlng[0]),
-    lng: parseFloat(latlng[1]),
-  };
+  return new google.maps.LatLng(parseFloat(latlng[0]), parseFloat(latlng[1]));
 }
 
 document.getElementById("btn_search").addEventListener("click", function () {
   loading.style.display = "flex";
   const mapUrl = document.getElementById("map-url").value;
   const origin = document.getElementById("origin").value.replace(/\s+/g, "");
-  const waypoints = document
-    .getElementById("waypoints")
-    .value.replace(/\s+/g, "");
-  const destination = document
-    .getElementById("destination")
-    .value.replace(/\s+/g, "");
-  const appcode = document.getElementById("app-code").value;
+  const waypoints = document.getElementById("waypoints").value.replace(/\s+/g, "");
+  const destination = document.getElementById("destination").value.replace(/\s+/g, "");
 
-  fetch(
-    `${mapUrl}/maps/api/directions/json?origin=${origin}&destination=${destination}&waypoints=${waypoints}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "App-Code": appcode,
-      },
-    },
-  )
+  const url = new URL(`${mapUrl}/maps/api/directions/json`);
+  url.searchParams.append("origin", origin);
+  url.searchParams.append("destination", destination);
+  url.searchParams.append("waypoints", waypoints);
+
+  fetch(url, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  })
     .then((response) => {
       if (!response.ok) throw new Error("Network response was not ok");
       return response.json();
@@ -161,8 +144,7 @@ document.getElementById("btn_search").addEventListener("click", function () {
         label.className = "text-sm font-medium cursor-pointer";
         // use route.summary if available, otherwise fall back to index
         label.textContent =
-          `${route.summary} | ${route.legs[0].distance.text}, ${route.legs[0].duration.text}` ||
-          `Route ${idx + 1}`;
+          `${route.summary} | ${route.legs[0].distance.text}, ${route.legs[0].duration.text}` || `Route ${idx + 1}`;
 
         wrapper.appendChild(input);
         wrapper.appendChild(label);
@@ -171,13 +153,8 @@ document.getElementById("btn_search").addEventListener("click", function () {
         // when radio selection changes, redraw that route
         input.addEventListener("change", () => {
           if (input.checked) {
-            const poly =
-              route.overview_polyline && route.overview_polyline.points;
-            const dist =
-              route.legs &&
-              route.legs[0] &&
-              route.legs[0].distance &&
-              route.legs[0].distance.text;
+            const poly = route.overview_polyline && route.overview_polyline.points;
+            const dist = route.legs && route.legs[0] && route.legs[0].distance && route.legs[0].distance.text;
             if (poly) {
               drawTracking(poly, startPoint, endPoint, dist || "");
             }
@@ -186,7 +163,7 @@ document.getElementById("btn_search").addEventListener("click", function () {
       });
     })
     .catch((err) => {
-      alert(err);
+      console.error(err);
     })
     .finally(() => {
       loading.style.display = "none";
@@ -198,20 +175,20 @@ map.addListener("click", function (event) {
   const lng = event.latLng.lng();
   let marker = null;
   let input = null;
-  if (!startMarker.getMap()) {
+  if (!startMarker.map) {
     marker = startMarker;
     input = document.getElementById("origin");
-  } else if (!endMarker.getMap()) {
+  } else if (!endMarker.map) {
     marker = endMarker;
     input = document.getElementById("destination");
   }
 
   if (marker) {
+    marker.map = map;
+    marker.position = event.latLng;
     input.value = `${lat},${lng}`;
-    marker.setPosition(event.latLng);
-    marker.setMap(map);
     marker.addListener("click", function () {
-      marker.setMap(null); // Remove marker when clicked
+      marker.map = null; // Remove marker when clicked
       input.value = ""; // Clear the input field
     });
   }
