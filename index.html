@@ -16,10 +16,11 @@
             <input id="origin" type="text" class="flex-1 border rounded px-3 py-2" placeholder="origin" value="">
             <input id="waypoints" type="text" class="flex-1 border rounded px-3 py-2" placeholder="waypoints" value="">
             <input id="destination" class="flex-1 border rounded px-3 py-2" type="text" placeholder="destination" value="" />
+            <input id="office-id" class="flex-1 border rounded px-3 py-2" type="text" placeholder="office id" value="" />
             <button class="px-3 py-2 rounded border hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700" type="button" id="btn_search">Search</button>
         </div>
         <div id="map" class="w-full h-[calc(100vh-50px)]"></div>
-        <div id="routes" class="absolute top-[110px] left-4 bg-white border border-gray-300 rounded-lg shadow-lg p-4 space-y-3" style="display: none;"></div>
+        <div id="routes" class="absolute top-[70px] left-4 bg-white border border-gray-300 rounded-lg shadow-lg p-4 space-y-3" style="display: none; z-index: 450;"></div>
         <div id="loading" style="display: none;" class="absolute w-screen h-screen inset-0 z-50 bg-black opacity-30 flex items-center justify-center">
             <div class="w-12 h-12">
                 <svg aria-hidden="true" class="w-full h-full text-gray-200 animate-spin fill-yellow-400" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
