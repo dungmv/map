@@ -1,17 +1,24 @@
 import "./style.css";
 import "leaflet/src/leaflet.css";
 import { decode } from "@googlemaps/polyline-codec";
-import L, {Map, TileLayer, Marker, Popup, LatLng, Polyline} from "leaflet";
+import L, {Map, TileLayer, Marker, Popup, LatLng, Polyline, Control} from "leaflet";
 
 /** @type {Polyline} */
 let polylineTracking = null;
 const loading = document.getElementById("loading");
 
-const map = new Map("map").setView(new LatLng(21.036809, 105.782771), 15)
+const map = new Map("map", {
+  zoom: 15,
+  center: [21.036809, 105.782771],
+  zoomControl: false
+})
 const tl = new TileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}',
   { foo: 'bar', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }
 );
 tl.addTo(map)
+
+const cz = new Control.Zoom({ position: 'bottomleft' });
+cz.addTo(map);
 
 const startMarker = new Marker({ lat: 21.029245, lng: 105.777964 });
 const endMarker = new Marker({ lat: 21.036809, lng: 105.782771 });
