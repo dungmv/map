@@ -7,9 +7,9 @@
   },
   "packageManager": "pnpm@10.26.0",
   "devDependencies": {
-    "@googlemaps/js-api-loader": "^2.0.2",
+    "@googlemaps/polyline-codec": "^1.0.28",
     "@tailwindcss/vite": "^4.1.18",
-    "@types/google.maps": "^3.58.1",
+    "leaflet": "2.0.0-alpha.1",
     "tailwindcss": "^4.1.4",
     "vite": "^7.3.0"
   }

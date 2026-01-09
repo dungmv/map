@@ -1,85 +1,49 @@
 import "./style.css";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
+import "leaflet/src/leaflet.css";
+import { decode } from "@googlemaps/polyline-codec";
+import L, {Map, TileLayer, Marker, Popup, LatLng, Polyline} from "leaflet";
 
-const mapEl = document.getElementById("map");
-
-// Set the options for loading the API.
-setOptions({ key: "AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg" });
-await importLibrary("maps");
-await importLibrary("marker");
-await importLibrary("geometry");
-
+/** @type {Polyline} */
 let polylineTracking = null;
 const loading = document.getElementById("loading");
 
-const map = new google.maps.Map(mapEl, {
-  zoom: 15,
-  center: { lat: 21.036809, lng: 105.782771 },
-  mapTypeId: google.maps.MapTypeId.ROADMAP,
-  mapId: "DEMO_MAP_ID",
-});
+const map = new Map("map").setView(new LatLng(21.036809, 105.782771), 15)
+const tl = new TileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}',
+  { foo: 'bar', attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }
+);
+tl.addTo(map)
 
-const startImg = new google.maps.marker.PinElement({
-  glyphColor: "white",
-  background: "green",
-  borderColor: "black",
-});
-const startMarker = new google.maps.marker.AdvancedMarkerElement({
-  title: "Điểm đón khách",
-  position: { lat: 21.029245, lng: 105.777964 },
-});
-startMarker.append(startImg);
-
-const endMarker = new google.maps.marker.AdvancedMarkerElement({
-  title: "Điểm trả",
-  position: { lat: 21.036809, lng: 105.782771 },
-});
-
-const infoWindow = new google.maps.InfoWindow({
-  size: new google.maps.Size(360, 180),
-});
+const startMarker = new Marker({ lat: 21.029245, lng: 105.777964 });
+const endMarker = new Marker({ lat: 21.036809, lng: 105.782771 });
+const infoWindow = new Popup();
 
 function drawTracking(encodedPolyline, startPoint, endPoint, distance) {
   clearMap();
-  startMarker.position = startPoint;
-  endMarker.position = endPoint;
-  startMarker.setMap(map);
-  endMarker.setMap(map);
+  startMarker.setLatLng(startPoint).addTo(map);
+  endMarker.setLatLng(endPoint).addTo(map);
 
   // Decode the polyline
-  const decodedPath = google.maps.geometry.encoding.decodePath(encodedPolyline);
-
-  polylineTracking = new google.maps.Polyline({
-    path: decodedPath,
-    geodesic: true,
-    strokeColor: "blue",
-    strokeOpacity: 1,
-    strokeWeight: 4,
-  });
-
-  polylineTracking.setMap(map);
+  const decodedPath = decode(encodedPolyline);
+  polylineTracking = new Polyline(decodedPath, { color: "blue" });
+  polylineTracking.addTo(map);
 
   // set center map
-  const centerPoint = new google.maps.LatLng(
-    parseFloat((startPoint.lat() + endPoint.lat()) / 2),
-    parseFloat((startPoint.lng() + endPoint.lng()) / 2),
+  const centerPoint = new LatLng(
+    parseFloat((startPoint.lat + endPoint.lat) / 2),
+    parseFloat((startPoint.lng + endPoint.lng) / 2),
   );
-  map.setCenter(centerPoint);
 
-  const bounds = new google.maps.LatLngBounds();
-  bounds.extend(startPoint);
-  bounds.extend(endPoint);
-  map.fitBounds(bounds);
+  map.fitBounds(polylineTracking.getBounds());
 
   infoWindow.setContent(distance);
-  infoWindow.setPosition(centerPoint);
-  infoWindow.open(map);
+  infoWindow.setLatLng(centerPoint);
+  infoWindow.openOn(map);
 }
 
 function clearMap() {
-  startMarker.setMap(null);
-  startMarker.setMap(null);
-  if (polylineTracking) polylineTracking.setMap(null);
+  startMarker.remove(null);
+  startMarker.remove(null);
+  if (polylineTracking) polylineTracking.remove(null);
   polylineTracking = null;
 }
 
@@ -90,12 +54,13 @@ function clearMap() {
  */
 function toLatLng(point) {
   const latlng = point.split(",");
-  return new google.maps.LatLng(parseFloat(latlng[0]), parseFloat(latlng[1]));
+  return new LatLng(parseFloat(latlng[0]), parseFloat(latlng[1]));
 }
 
 document.getElementById("btn_search").addEventListener("click", function () {
   loading.style.display = "flex";
   const mapUrl = document.getElementById("map-url").value;
+  const officeId = document.getElementById("office-id").value;
   const origin = document.getElementById("origin").value.replace(/\s+/g, "");
   const waypoints = document.getElementById("waypoints").value.replace(/\s+/g, "");
   const destination = document.getElementById("destination").value.replace(/\s+/g, "");
@@ -107,7 +72,10 @@ document.getElementById("btn_search").addEventListener("click", function () {
 
   fetch(url, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Office-Id": officeId
+    },
   })
     .then((response) => {
       if (!response.ok) throw new Error("Network response was not ok");
@@ -170,12 +138,11 @@ document.getElementById("btn_search").addEventListener("click", function () {
     });
 });
 
-map.addListener("click", function (event) {
-  const lat = event.latLng.lat();
-  const lng = event.latLng.lng();
+map.on("click", function (event) {
+  const {lat, lng} = event.latlng;
   let marker = null;
   let input = null;
-  if (!startMarker.map) {
+  if (!startMarker._map) {
     marker = startMarker;
     input = document.getElementById("origin");
   } else if (!endMarker.map) {
@@ -185,9 +152,9 @@ map.addListener("click", function (event) {
 
   if (marker) {
     marker.map = map;
-    marker.position = event.latLng;
+    marker.position = event.latlng;
     input.value = `${lat},${lng}`;
-    marker.addListener("click", function () {
+    marker.on("click", function () {
       marker.map = null; // Remove marker when clicked
       input.value = ""; // Clear the input field
     });
