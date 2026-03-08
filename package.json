@@ -9,6 +9,7 @@
   "devDependencies": {
     "@googlemaps/polyline-codec": "^1.0.28",
     "@tailwindcss/vite": "^4.1.18",
+    "humanize-duration": "^3.33.2",
     "leaflet": "2.0.0-alpha.1",
     "tailwindcss": "^4.1.4",
     "vite": "^7.3.0"

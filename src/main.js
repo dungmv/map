@@ -1,7 +1,8 @@
 import "./style.css";
-import "leaflet/src/leaflet.css";
+import "leaflet/dist/leaflet.css";
 import { decode } from "@googlemaps/polyline-codec";
 import L, {Map, TileLayer, Marker, Popup, LatLng, Polyline, Control} from "leaflet";
+import humanizeDuration from "humanize-duration";
 
 /** @type {Polyline} */
 let polylineTracking = null;
@@ -23,6 +24,37 @@ cz.addTo(map);
 const startMarker = new Marker({ lat: 21.029245, lng: 105.777964 });
 const endMarker = new Marker({ lat: 21.036809, lng: 105.782771 });
 const infoWindow = new Popup();
+
+function formatDuration(seconds) {
+  return humanizeDuration(seconds * 1000, { language: "en" });
+}
+
+function summarizeRoute(route) {
+  const legs = route.legs;
+
+  const total = legs.reduce(
+    (acc, leg) => ({
+      distance: acc.distance + leg.distance.value, // meters
+      duration: acc.duration + leg.duration.value, // seconds
+    }),
+    { distance: 0, duration: 0 }
+  );
+
+  return {
+    totalDistanceM: total.distance,
+    totalDistanceKm: (total.distance / 1000).toFixed(1),
+    totalDurationSec: total.duration,
+    totalDurationText: formatDuration(total.duration),
+    totalDistanceText: `${(total.distance / 1000).toFixed(1)} km`,
+    legs: legs.map((leg, i) => ({
+      index: i,
+      from: leg.start_address,
+      to: leg.end_address,
+      distance: leg.distance.text,
+      duration: leg.duration.text,
+    })),
+  };
+}
 
 function drawTracking(encodedPolyline, startPoint, endPoint, distance) {
   clearMap();
@@ -118,8 +150,8 @@ document.getElementById("btn_search").addEventListener("click", function () {
         label.htmlFor = id;
         label.className = "text-sm font-medium cursor-pointer";
         // use route.summary if available, otherwise fall back to index
-        label.textContent =
-          `${route.summary} | ${route.legs[0].distance.text}, ${route.legs[0].duration.text}` || `Route ${idx + 1}`;
+        const summary = summarizeRoute(route);
+        label.textContent = `${route.summary} | ${summary.totalDistanceText}, ${summary.totalDurationText}` || `Route ${idx + 1}`;
 
         wrapper.appendChild(input);
         wrapper.appendChild(label);
@@ -129,9 +161,8 @@ document.getElementById("btn_search").addEventListener("click", function () {
         input.addEventListener("change", () => {
           if (input.checked) {
             const poly = route.overview_polyline && route.overview_polyline.points;
-            const dist = route.legs && route.legs[0] && route.legs[0].distance && route.legs[0].distance.text;
             if (poly) {
-              drawTracking(poly, startPoint, endPoint, dist || "");
+              drawTracking(poly, startPoint, endPoint, summary.totalDistanceText);
             }
           }
         });
